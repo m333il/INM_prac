@@ -51,20 +51,19 @@ void arnoldi_iteration(double *A, double *b, int n, int k, double *Q, double *h)
     }
     
     for (int i = 1; i <= k; ++i) {
-        matvec(A, Q + (i - 1) * (k + 1), v, n);
+        matvec(A, Q + (i - 1) * n, v, n);
         for (int j = 0; j < i; ++j) {
-            h[j * k + i - 1] = dot(Q + j * (k + 1), v, n);
-            vec_sub(v, Q + j * (k + 1), h[j * k + i - 1], n);
+            h[j * k + i - 1] = dot(Q + j * n, v, n);
+            vec_sub(v, Q + j * n, h[j * k + i - 1], n);
         }
         h[i * k + i - 1] = norm(v, n);
         if (h[i * k + i - 1] > eps) {
             //Q[:, k] = v / h[k, k - 1]
             for (int j = 0; j < n; ++j) {
-                Q[i * (k + 1) + j] = v[j] / h[i * k + i - 1];
+                Q[i * n + j] = v[j] / h[i * k + i - 1];
             }
         } else {
-            delete[] v;
-            return;
+            break;
         }
     }
     delete[] v;
@@ -94,9 +93,7 @@ int main(int argc, char **argv) {
         h[i] = 0.0;
     for (int i = 0; i < (k + 1) * n; ++i)
         Q[i] = 0.0;
-
     arnoldi_iteration(A, v1, n, k, Q, h);
-
     std::ofstream A_file, h_file;
     A_file.open("A.txt");
     h_file.open("h.txt");
