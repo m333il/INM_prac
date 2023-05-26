@@ -145,7 +145,14 @@ int main(int argc, char **argv) {
     
     int info = LAPACKE_dhseqr(LAPACK_ROW_MAJOR, 'E', 'N', k, 1, k, h, k, wr, wi, Z, k);
     std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-    std::cout << "Time for n = " << n << " and num_threads = " << np << " is " << std::chrono::duration_cast<std::chrono::milliseconds> (end - begin).count() << "[ms]" << std::endl;
+    
+    std::ofstream log;
+    log.open("../log.txt", std::ios::app); 
+    log << "n = " << n << ", k = " << k << std::endl;
+    log << "np = " << np << std::endl;
+    log << "time = " << std::chrono::duration_cast<std::chrono::milliseconds> (end - begin).count() << " [ms]" << std::endl << std::endl;
+    log.close();
+    
     delete[] Z;
     delete[] Q;
     delete[] h;

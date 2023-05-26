@@ -213,6 +213,7 @@ int main(int argc, char *argv[]) {
 
     Matrix A(my_amount, n, my_rank, total_processes);
 
+    double time = MPI_Wtime();
     double *h = arnoldi_iteration<double, Matrix>(A, k);
     if (my_rank == 0) {
         double *wr = new double[k];
@@ -223,7 +224,14 @@ int main(int argc, char *argv[]) {
         delete[] wr;
         delete[] wi;
     }
+    time = MPI_Wtime() - time;
     if (my_rank == 0) {
+        std::ofstream log;
+        log.open("../log.txt", std::ios::app); 
+        log << "n = " << n << ", k = " << k << std::endl;
+        log << "np = " << total_processes << std::endl;
+        log << "time = " << time << std::endl << std::endl;
+        log.close();
         delete[] h;
     }
     MPI_Finalize();
