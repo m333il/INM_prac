@@ -8,26 +8,26 @@
 #include <chrono>
 #include <lapacke.h>
 
-int num_threads;
-
-double drand(double a, double b) {
+template<class T>
+T trand(T a, T b) {
     double f = (double)rand() / RAND_MAX;
-    return a + f * (b - a);
+    return (T)(a + f * (b - a));
 }
 
+template<class T>
 class Matrix
 {
 private:
     const uint32_t n;
-    double *A;
-    const double a, b;
+    T *A;
+    const T a, b;
 public:
-    Matrix(uint32_t size, double a = -10.0, double b = 10.0) : 
+    Matrix(uint32_t size, T a = -10.0, T b = 10.0) : 
         n(size), a(a), b(b)
     {
-        A = new double[n * n];
+        A = new T[n * n];
         for (uint32_t i = 0; i < n * n; ++i) {
-            A[i] = drand(a, b);
+            A[i] = trand(a, b);
         }
     }
 
@@ -46,7 +46,7 @@ public:
         A_file.close();
     }
 
-    void matvec(double *x, double *res) const {
+    void matvec(T *x, T *res) const {
         uint32_t i, j;
         for (i = 0; i < n; ++i) {
             res[i] = A[i * n] * x[0];
@@ -61,46 +61,50 @@ public:
     }
 };
 
-double norm(double *vec, int n) {
-    double res = 0.0;
+template<class T>
+T norm(T *vec, int n) {
+    T res = 0.0;
     for (unsigned i = 0; i < n; ++i)
         res += vec[i] * vec[i];
     return sqrt(res);
 }
 
-void normalize(double *vec, int n) {
-    double vnorm = norm(vec, n);
+template<class T>
+void normalize(T *vec, int n) {
+    T vnorm = norm(vec, n);
     for (int i = 0; i < n; ++i) {
         vec[i] /= vnorm;
     }
 }
 
-double dot(double *v1, double *v2, int n) {
-    double res = 0.0;
+template<class T>
+T dot(T *v1, T *v2, int n) {
+    T res = 0.0;
     for (int i = 0; i < n; ++i) {
         res += v1[i] * v2[i];
     }
     return res;
 }
 
-void vec_sub(double *v1, double *v2, double alpha, int n) {
-    
+template<class T>
+void vec_sub(T *v1, T *v2, T alpha, int n) {
     for (int i = 0; i < n; ++i) {
         v1[i] -= alpha * v2[i];
     }
 }
 
-void arnoldi_iteration(Matrix &A, int k, double *Q, double *h) {
+template<class T>
+void arnoldi_iteration(Matrix<T> &A, int k, T *Q, T *h) {
     //A - n x n array
     //b - initial vector, length n
     //k - amount of iterations
 
     const uint32_t n = A.order();
     double eps = 1e-12;
-    double *v = new double[n];
+    T *v = new T[n];
 
     for (int i = 0; i < n; ++i) {
-        Q[i] = drand(-10.0, 10.0);
+        Q[i] = trand(-10.0, 10.0);
     }
     normalize(Q, n);
 
@@ -127,8 +131,7 @@ void arnoldi_iteration(Matrix &A, int k, double *Q, double *h) {
 int main(int argc, char **argv) {
     int n = atoi(argv[1]);
     int k = atoi(argv[2]);
-    num_threads = atoi(argv[3]);
-    Matrix A(n);
+    Matrix<double> A(n);
 
     double *Q = new double[(k + 1) * n];
     double *h = new double[(k + 1) * k];
@@ -139,10 +142,10 @@ int main(int argc, char **argv) {
     double *Z = new double[k * k];
     std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
     arnoldi_iteration(A, k, Q, h);
+    
     int info = LAPACKE_dhseqr(LAPACK_ROW_MAJOR, 'E', 'N', k, 1, k, h, k, wr, wi, Z, k);
     std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-    std::cout << "Time difference for n = " << n << " and num_threads = " << num_threads << " is  " << std::chrono::duration_cast<std::chrono::milliseconds> (end - begin).count() << "[ms]" << std::endl;
-
+    std::cout << "Time for n = " << n << " is " << std::chrono::duration_cast<std::chrono::milliseconds> (end - begin).count() << "[ms]" << std::endl;
     delete[] Z;
     delete[] Q;
     delete[] h;
