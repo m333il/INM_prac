@@ -212,30 +212,13 @@ int main(int argc, char *argv[]) {
     }
 
     Matrix A(my_amount, n, my_rank, total_processes);
-    A.save();
 
     double *h = arnoldi_iteration<double, Matrix>(A, k);
     if (my_rank == 0) {
-        std::ofstream fouth("h.txt");
-        for (int i = 0; i < k * k; ++i) {
-            fouth << h[i] << " ";
-        }
-        fouth.close();
         double *wr = new double[k];
         double *wi = new double[k];
         double *Z = new double[k * k];
         int info = LAPACKE_dhseqr(LAPACK_ROW_MAJOR, 'E', 'N', k, 1, k, h, k, wr, wi, Z, k);
-        std::ofstream foutwi("wi.txt");
-        std::ofstream foutwr("wr.txt");
-        
-        for (int i = 0; i < k; ++i) {
-            foutwi.precision(17);
-            foutwr.precision(17);
-            foutwi << std::fixed << wi[i] << " ";
-            foutwr << std::fixed << wr[i] << " ";
-        }
-        foutwi.close();
-        foutwr.close();
         delete[] Z;
         delete[] wr;
         delete[] wi;
