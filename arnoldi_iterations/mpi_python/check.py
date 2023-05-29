@@ -1,8 +1,8 @@
 import numpy as np
 import sys
 
-amount = sys.argv[1]
-n = sys.argv[2]
+amount = int(sys.argv[1])
+n = int(sys.argv[2])
 
 As = []
 

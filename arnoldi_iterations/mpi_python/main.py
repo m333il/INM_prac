@@ -22,7 +22,7 @@ class Matrix:
         self.col = col
         self.my_rank = my_rank
         self.total_processes = total_processes
-        self.A = np.random.rand(row * col)
+        self.A = np.random.rand(row, col)
 
         self.extra = 1
         if my_rank < col % total_processes:
@@ -51,9 +51,7 @@ class Matrix:
             request_recieve = MPI.COMM_WORLD.Irecv(x, self.source, 21)
             request_send = MPI.COMM_WORLD.Isend(self.v, self.dest, 21)
 
-            for i in range(self.row):
-                for j in range(self.blocks_columns[k]):
-                    res[i] += self.A[i * self.col + (j + self.offset)] * self.v[j]
+            res[ : self.row] += self.A[:, self.offset : self.offset + self.blocks_columns[k]] @ self.v[ : self.blocks_columns[k]]
             self.offset = (self.offset + self.blocks_columns[k]) % self.col
 
             request_recieve.wait()
